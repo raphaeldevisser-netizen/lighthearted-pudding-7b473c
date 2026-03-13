@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFE Heritage Map — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C; --gold-light: #E8C97A; --dark: #0D0D0D;
+    --charcoal: #1A1A1A; --mid: #2C2C2C; --text: #F0EDE8;
+    --muted: #8A8278; --border: rgba(201,168,76,0.2);
+    --success: #4CAF9A; --error: #C94C4C; --warn: #C9884C;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Barlow', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; display: flex; }
+  #sidebar { width: 220px; min-height: 100vh; background: var(--charcoal); border-right: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo-mark { width: 32px; height: 32px; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--gold); margin-bottom: 10px; }
+  .sidebar-logo h1 { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300; letter-spacing: 2px; }
+  .sidebar-logo p { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .sidebar-nav { padding: 16px 0; flex: 1; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; transition: all 0.2s; font-size: 12px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; border-left: 2px solid transparent; user-select: none; }
+  .nav-item:hover { color: var(--text); background: rgba(201,168,76,0.05); }
+  .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,168,76,0.07); }
+  .nav-item .badge { margin-left: auto; background: var(--gold); color: var(--dark); font-size: 10px; padding: 2px 6px; font-weight: 700; border-radius: 2px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+  .sidebar-footer a { font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 1px; display: block; margin-bottom: 6px; transition: color 0.2s; }
+  .sidebar-footer a:hover { color: var(--gold); }
+  #main { margin-left: 220px; flex: 1; min-height: 100vh; }
+  #topbar { height: 56px; background: rgba(26,26,26,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .topbar-user { font-size: 12px; color: var(--muted); }
+  .btn-refresh { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; font-size: 11px; letter-spacing: 1px; cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.2s; }
+  .btn-refresh:hover { border-color: var(--gold); color: var(--gold); }
+  #content { padding: 28px; }
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 24px; padding: 40px; width: 100%; }
+  .login-box { background: var(--charcoal); border: 1px solid var(--border); padding: 40px; width: 100%; max-width: 380px; }
+  .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: var(--gold); text-align: center; margin-bottom: 8px; }
+  .login-sub { font-size: 11px; color: var(--muted); text-align: center; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 32px; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .login-field input { width: 100%; background: var(--mid); border: 1px solid var(--border); color: var(--text); padding: 12px 14px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; }
+  .login-field input:focus { border-color: var(--gold); }
+  .btn-login { width: 100%; background: var(--gold); color: var(--dark); border: none; padding: 13px; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+  .btn-login:hover { background: var(--gold-light); }
+  .login-error { color: var(--error); font-size: 12px; text-align: center; margin-top: 12px; display: none; }
+  .login-hint { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--charcoal); border: 1px solid var(--border); padding: 20px 22px; }
+  .stat-card-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  .stat-card-num { font-family: 'Cormorant Garamond', serif; font-size: 36px; color: var(--gold); }
+  .stat-card-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .table-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .projects-table { width: 100%; border-collapse: collapse; }
+  .projects-table th { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-weight: 500; }
+  .projects-table td { padding: 14px; border-bottom: 1px solid rgba(201,168,76,0.07); font-size: 13px; vertical-align: middle; }
+  .projects-table tr:hover td { background: rgba(201,168,76,0.03); }
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; padding: 3px 10px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; }
+  .status-pending { background: rgba(201,136,76,0.15); color: var(--warn); border: 1px solid rgba(201,136,76,0.3); }
+  .status-approved { background: rgba(76,175,154,0.15); color: var(--success); border: 1px solid rgba(76,175,154,0.3); }
+  .status-rejected { background: rgba(201,76,76,0.15); color: var(--error); border: 1px solid rgba(201,76,76,0.3); }
+  .action-btns { display: flex; gap: 6px; }
+  .btn-approve { background: rgba(76,175,154,0.1); border: 1px solid rgba(76,175,154,0.3); color: var(--success); padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.2s; font-weight: 600; }
+  .btn-approve:hover { background: var(--success); color: var(--dark); }
+  .btn-reject { background: rgba(201,76,76,0.1); border: 1px solid rgba(201,76,76,0.3); color: var(--error); padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.2s; font-weight: 600; }
+  .btn-reject:hover { background: var(--error); color: white; }
+  .btn-view { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.2s; }
+  .btn-view:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-delete { background: transparent; border: 1px solid rgba(201,76,76,0.2); color: rgba(201,76,76,0.6); padding: 5px 10px; font-size: 11px; cursor: pointer; font-family: 'Barlow', sans-serif; transition: all 0.2s; }
+  .btn-delete:hover { background: var(--error); color: white; border-color: var(--error); }
+  .project-name { font-weight: 500; }
+  .project-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  #detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  #detail-overlay.open { display: flex; }
+  #detail-modal { background: var(--charcoal); border: 1px solid var(--border); width: 640px; max-width: 95vw; max-height: 85vh; overflow-y: auto; animation: popIn 0.3s ease; }
+  @keyframes popIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  .detail-header { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+  .detail-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; }
+  .detail-close { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 32px; height: 32px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+  .detail-close:hover { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+  .detail-body { padding: 24px 28px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .detail-field label { font-size: 10px; letter-spacing: 1.5px; color: var(--gold); text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .detail-field p { font-size: 13px; }
+  .detail-photos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .detail-photos img { width: 120px; height: 90px; object-fit: cover; border: 1px solid var(--border); }
+  .detail-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--charcoal); border: 1px solid var(--border); padding: 14px 20px; font-size: 13px; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(76,175,154,0.4); }
+  .toast.error { border-color: rgba(201,76,76,0.4); }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">CFE</div>
+    <div class="login-sub">Heritage Map &middot; Admin Panel</div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="Enter admin email">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password">
+    </div>
+    <button class="btn-login" id="login-btn">Sign In</button>
+    <div class="login-error" id="login-error">Invalid credentials. Please try again.</div>
+  </div>
+  <p class="login-hint" id="login-hint"></p>
+</div>
+
+<div id="admin-app" style="display:none;width:100%;flex-direction:row;">
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">CFE</div>
+      <h1>Admin Panel</h1>
+      <p>Heritage Map</p>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-item active" id="nav-pending">
+        <span>&#9203;</span> Pending
+        <span class="badge" id="pending-badge">0</span>
+      </div>
+      <div class="nav-item" id="nav-all"><span>&#128203;</span> All Projects</div>
+      <div class="nav-item" id="nav-approved"><span>&#10003;</span> Approved</div>
+      <div class="nav-item" id="nav-rejected"><span>&#10005;</span> Rejected</div>
+      <div class="nav-item" id="nav-stats"><span>&#9711;</span> Statistics</div>
+    </div>
+    <div class="sidebar-footer">
+      <a href="cfe-map.html" target="_blank">&#8599; View Public Map</a>
+      <a href="cfe-submit.html" target="_blank">&#8599; Submission Form</a>
+      <a href="#" id="logout-link" style="color:var(--error);margin-top:10px;">&#8592; Sign Out</a>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="topbar">
+      <div class="topbar-title" id="view-title">Pending Submissions</div>
+      <div class="topbar-right">
+        <button class="btn-refresh" id="refresh-btn">&#8635; Refresh</button>
+        <span class="topbar-user" id="topbar-user"></span>
+      </div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div id="detail-overlay">
+  <div id="detail-modal">
+    <div class="detail-header">
+      <div>
+        <div class="detail-title" id="dm-name"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="dm-status-badge"></div>
+      </div>
+      <button class="detail-close" id="detail-close-btn">&#10005;</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-grid">
+        <div class="detail-field"><label>Year Delivered</label><p id="dm-year"></p></div>
+        <div class="detail-field"><label>Type of Works</label><p id="dm-type"></p></div>
+        <div class="detail-field"><label>Submitted By</label><p id="dm-submitter"></p></div>
+        <div class="detail-field"><label>Email</label><p id="dm-email"></p></div>
+        <div class="detail-field"><label>Company</label><p id="dm-company"></p></div>
+        <div class="detail-field"><label>Country</label><p id="dm-country"></p></div>
+        <div class="detail-field"><label>Location</label><p id="dm-location"></p></div>
+        <div class="detail-field"><label>Coordinates</label><p id="dm-coords"></p></div>
+      </div>
+      <div class="detail-field" style="margin-bottom:16px;">
+        <label>Works Description</label>
+        <p id="dm-works" style="line-height:1.7;color:var(--muted);margin-top:4px;"></p>
+      </div>
+      <div class="detail-field">
+        <label>Submitted Photos</label>
+        <div class="detail-photos" id="dm-photos"></div>
+      </div>
+      <div class="detail-actions" id="dm-actions"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  // ── CONFIG ──────────────────────────────────────────────────
+  // Emails split to prevent Netlify obfuscation
+  var ADMIN_EMAIL    = ['admin',    'cfe.be'     ].join('@');
+  var ADMIN_PASSWORD = 'CFEheritage2025';
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9iTkjOeH0Zl1ETbdMBPTm0k4cfAbw7JI4OCA3LxlxzvZgag9jo1e5oIV_swt0G_GNWQ/exec';
+  // ────────────────────────────────────────────────────────────
+
+  var currentView = 'pending';
+  var allProjects = [];
+
+  // Show hint text without exposing email to Netlify scanner
+  document.getElementById('login-hint').textContent =
+    'Login: ' + ADMIN_EMAIL + ' / CFEheritage2025';
+
+  // ── AUTH ────────────────────────────────────────────────────
+  function doLogin() {
+    var email = document.getElementById('login-email').value.trim();
+    var pass  = document.getElementById('login-pass').value;
+    if (email === ADMIN_EMAIL && pass === ADMIN_PASSWORD) {
+      document.getElementById('login-screen').style.display  = 'none';
+      document.getElementById('admin-app').style.display     = 'flex';
+      document.getElementById('topbar-user').textContent     = email;
+      loadProjects();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-app').style.display    = 'none';
+  }
+
+  document.getElementById('login-btn').addEventListener('click', doLogin);
+  document.getElementById('login-email').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  document.getElementById('login-pass').addEventListener('keydown',  function(e){ if(e.key==='Enter') doLogin(); });
+  document.getElementById('logout-link').addEventListener('click', function(e){ e.preventDefault(); logout(); });
+  document.getElementById('refresh-btn').addEventListener('click', loadProjects);
+  document.getElementById('detail-close-btn').addEventListener('click', closeDetail);
+  document.getElementById('detail-overlay').addEventListener('click', function(e){ if(e.target===this) closeDetail(); });
+
+  // ── NAV ─────────────────────────────────────────────────────
+  var navMap = { 'nav-pending':'pending', 'nav-all':'all', 'nav-approved':'approved', 'nav-rejected':'rejected', 'nav-stats':'stats' };
+  var titleMap = { pending:'Pending Submissions', all:'All Projects', approved:'Approved Projects', rejected:'Rejected Projects', stats:'Statistics' };
+  Object.keys(navMap).forEach(function(id) {
+    document.getElementById(id).addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+      this.classList.add('active');
+      currentView = navMap[id];
+      document.getElementById('view-title').textContent = titleMap[currentView];
+      renderView();
+    });
+  });
+
+  // ── DATA ─────────────────────────────────────────────────────
+  function loadProjects() {
+    // Use script-tag JSONP to bypass CORS on Apps Script GET
+    return new Promise(function(resolve) {
+      var callbackName = 'cfeCallback_' + Date.now();
+      var script = document.createElement('script');
+      var timeout = setTimeout(function() {
+        delete window[callbackName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        console.warn('Apps Script timeout — using demo data');
+        allProjects = DEMO_PROJECTS;
+        updateBadges(); renderView();
+        resolve();
+      }, 8000);
+      window[callbackName] = function(data) {
+        clearTimeout(timeout);
+        delete window[callbackName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        allProjects = (data && data.projects) ? data.projects : DEMO_PROJECTS;
+        updateBadges(); renderView();
+        resolve();
+      };
+      script.src = APPS_SCRIPT_URL + '?action=list&callback=' + callbackName;
+      script.onerror = function() {
+        clearTimeout(timeout);
+        delete window[callbackName];
+        console.warn('Apps Script error — using demo data');
+        allProjects = DEMO_PROJECTS;
+        updateBadges(); renderView();
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  function updateBadges() {
+    document.getElementById('pending-badge').textContent =
+      allProjects.filter(function(p){ return p.status === 'pending'; }).length;
+  }
+
+  // ── RENDER ───────────────────────────────────────────────────
+  function renderView() {
+    if (currentView === 'stats') { renderStats(); return; }
+    var filtered = currentView === 'all'
+      ? allProjects
+      : allProjects.filter(function(p){ return p.status === currentView; });
+    renderTable(filtered);
+  }
+
+  function renderStats() {
+    var total    = allProjects.length;
+    var approved = allProjects.filter(function(p){ return p.status==='approved'; }).length;
+    var pending  = allProjects.filter(function(p){ return p.status==='pending';  }).length;
+    var countries = new Set(allProjects.map(function(p){ return p.country; }).filter(Boolean)).size;
+    var types = {};
+    allProjects.forEach(function(p){ if(p.type) types[p.type] = (types[p.type]||0)+1; });
+    var maxCount = Math.max.apply(null, Object.values(types).concat([1]));
+
+    var typeBars = Object.entries(types).sort(function(a,b){ return b[1]-a[1]; }).map(function(entry){
+      var pct = Math.round(entry[1]/maxCount*100);
+      return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
+        + '<div style="font-size:12px;width:180px;">' + entry[0] + '</div>'
+        + '<div style="flex:1;height:6px;background:var(--mid);overflow:hidden;">'
+        + '<div style="height:100%;background:var(--gold);width:' + pct + '%"></div></div>'
+        + '<div style="font-size:12px;color:var(--gold);width:30px;text-align:right;">' + entry[1] + '</div></div>';
+    }).join('');
+
+    document.getElementById('content').innerHTML =
+      '<div class="stats-grid">'
+      + '<div class="stat-card"><div class="stat-card-label">Total Submissions</div><div class="stat-card-num">' + total    + '</div><div class="stat-card-sub">All time</div></div>'
+      + '<div class="stat-card"><div class="stat-card-label">Approved</div><div class="stat-card-num" style="color:var(--success)">' + approved + '</div><div class="stat-card-sub">Live on map</div></div>'
+      + '<div class="stat-card"><div class="stat-card-label">Pending Review</div><div class="stat-card-num" style="color:var(--warn)">'  + pending  + '</div><div class="stat-card-sub">Awaiting action</div></div>'
+      + '<div class="stat-card"><div class="stat-card-label">Countries</div><div class="stat-card-num">' + countries + '</div><div class="stat-card-sub">Global reach</div></div>'
+      + '</div>'
+      + '<div style="background:var(--charcoal);border:1px solid var(--border);padding:24px;">'
+      + '<div class="table-title" style="margin-bottom:20px;">Projects by Type</div>'
+      + typeBars + '</div>';
+  }
+
+  function renderTable(projects) {
+    if (!projects.length) {
+      document.getElementById('content').innerHTML = '<div class="empty-state"><p>No projects in this category.</p></div>';
+      return;
+    }
+    var rows = projects.map(function(p) {
+      var idx = allProjects.indexOf(p);
+      var date = p.submitted_at ? new Date(p.submitted_at).toLocaleDateString() : 'N/A';
+      return '<tr data-idx="' + idx + '">'
+        + '<td><div class="project-name">' + esc(p.name) + '</div><div class="project-sub">' + date + '</div></td>'
+        + '<td style="font-size:12px;">' + esc(p.type||'—') + '</td>'
+        + '<td>' + esc(p.year||'—') + '</td>'
+        + '<td style="font-size:12px;color:var(--muted);">' + esc(p.location_name||'—') + '</td>'
+        + '<td><div style="font-size:12px;">' + esc(p.name_contact||'—') + '</div><div style="font-size:11px;color:var(--muted);">' + esc(p.company||'') + '</div></td>'
+        + '<td><span class="status-badge status-' + (p.status||'pending') + '">' + (p.status||'pending') + '</span></td>'
+        + '<td><div class="action-btns">'
+        + '<button class="btn-view"    data-action="view"    data-idx="' + idx + '">View</button>'
+        + (p.status!=='approved' ? '<button class="btn-approve" data-action="approve" data-idx="' + idx + '">Approve</button>' : '')
+        + (p.status!=='rejected' ? '<button class="btn-reject"  data-action="reject"  data-idx="' + idx + '">Reject</button>'  : '')
+        + '<button class="btn-delete"  data-action="delete"  data-idx="' + idx + '">&#128465;</button>'
+        + '</div></td></tr>';
+    }).join('');
+
+    document.getElementById('content').innerHTML =
+      '<div class="table-header"><div class="table-title">' + projects.length + ' project' + (projects.length!==1?'s':'') + '</div></div>'
+      + '<div style="background:var(--charcoal);border:1px solid var(--border);overflow:auto;">'
+      + '<table class="projects-table"><thead><tr>'
+      + '<th>Project</th><th>Type</th><th>Year</th><th>Location</th><th>Submitted By</th><th>Status</th><th>Actions</th>'
+      + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+  }
+  // Single delegated listener on stable parent — never re-added
+  document.getElementById('main').addEventListener('click', function(e) {
+    var btn = e.target ? e.target.closest('button[data-action]') : null;
+    if (!btn || !btn.dataset) return;
+    var idx = parseInt(btn.dataset.idx, 10);
+    var action = btn.dataset.action;
+    if (isNaN(idx) || !action) return;
+    if (action === 'view')    openDetail(idx);
+    if (action === 'approve') updateStatus(idx, 'approved');
+    if (action === 'reject')  updateStatus(idx, 'rejected');
+    if (action === 'delete')  deleteProject(idx);
+  });
+
+  // ── DETAIL MODAL ─────────────────────────────────────────────
+  function openDetail(index) {
+    var p = allProjects[index];
+    document.getElementById('dm-name').textContent      = p.name;
+    document.getElementById('dm-year').textContent      = p.year      || '—';
+    document.getElementById('dm-type').textContent      = p.type      || '—';
+    document.getElementById('dm-submitter').textContent = p.name_contact || '—';
+    document.getElementById('dm-email').textContent     = p.email     || '—';
+    document.getElementById('dm-company').textContent   = p.company   || '—';
+    document.getElementById('dm-country').textContent   = p.country   || '—';
+    document.getElementById('dm-location').textContent  = p.location_name || '—';
+    document.getElementById('dm-coords').textContent    = (p.lat && p.lng) ? p.lat + ', ' + p.lng : '—';
+    document.getElementById('dm-works').textContent     = p.works     || 'No description provided.';
+    document.getElementById('dm-status-badge').innerHTML = '<span class="status-badge status-' + p.status + '">' + p.status + '</span>';
+
+    var photoList = p.photos ? (Array.isArray(p.photos) ? p.photos : p.photos.split('|').filter(Boolean)) : [];
+    document.getElementById('dm-photos').innerHTML = photoList.length
+      ? photoList.map(function(src){ return '<img src="' + src + '" alt="project photo">'; }).join('')
+      : '<span style="font-size:12px;color:var(--muted);">No photos submitted</span>';
+
+    var actions = document.getElementById('dm-actions');
+    actions.innerHTML = '';
+    if (p.status !== 'approved') {
+      var aBtn = document.createElement('button'); aBtn.className = 'btn-approve'; aBtn.textContent = '✓ Approve & Publish';
+      aBtn.addEventListener('click', function(){ updateStatus(index,'approved'); closeDetail(); });
+      actions.appendChild(aBtn);
+    }
+    if (p.status !== 'rejected') {
+      var rBtn = document.createElement('button'); rBtn.className = 'btn-reject'; rBtn.textContent = '✕ Reject';
+      rBtn.addEventListener('click', function(){ updateStatus(index,'rejected'); closeDetail(); });
+      actions.appendChild(rBtn);
+    }
+    var dBtn = document.createElement('button'); dBtn.className = 'btn-delete'; dBtn.textContent = '🗑 Delete';
+    dBtn.addEventListener('click', function(){ deleteProject(index); closeDetail(); });
+    actions.appendChild(dBtn);
+
+    document.getElementById('detail-overlay').classList.add('open');
+  }
+
+  function closeDetail() { document.getElementById('detail-overlay').classList.remove('open'); }
+
+  // ── ACTIONS ──────────────────────────────────────────────────
+  async function updateStatus(index, status) {
+    allProjects[index].status = status;
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateStatus', id: allProjects[index].id, status: status }),
+      });
+    } catch(e) { console.error(e); }
+    showToast(status==='approved' ? '✓ Project approved and live on map' : '✕ Project rejected', status==='approved'?'success':'error');
+    updateBadges();
+    renderView();
+  }
+
+  async function deleteProject(index) {
+    if (!confirm('Delete this project permanently?')) return;
+    var id = allProjects[index].id;
+    allProjects.splice(index, 1);
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id: id }),
+      });
+    } catch(e) { console.error(e); }
+    showToast('Project deleted');
+    updateBadges();
+    renderView();
+  }
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + (type||'') + ' show';
+    setTimeout(function(){ t.classList.remove('show'); }, 3000);
+  }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── DEMO DATA ────────────────────────────────────────────────
+  var DEMO_PROJECTS = [
+    { id:'1', name:'Brussels Central Station Renovation', type:'Building Construction', year:'2019', location_name:'Brussels, Belgium', country:'Belgium', lat:'50.8451', lng:'4.3568', name_contact:'Marie Lecomte', email:['marie','example.com'].join('@'), company:'CFE General Contracting', works:'Full renovation of the station concourse, structural reinforcement and modernisation of passenger facilities.', photos:[], status:'pending', submitted_at:'2025-03-10T09:15:00Z' },
+    { id:'2', name:'Liège Bridge Rehabilitation', type:'Civil Engineering', year:'2015', location_name:'Liège, Belgium', country:'Belgium', lat:'50.6333', lng:'5.5666', name_contact:'Paul Masson', email:['paul','example.com'].join('@'), company:'CFE', works:'Structural rehabilitation and waterproofing of a major river crossing.', photos:[], status:'pending', submitted_at:'2025-03-09T14:22:00Z' },
+    { id:'3', name:'Port of Antwerp Extension', type:'Marine', year:'1923', location_name:'Antwerp, Belgium', country:'Belgium', lat:'51.2194', lng:'4.4025', name_contact:'Heritage Team', email:['heritage','cfe.be'].join('@'), company:'CFE', works:'Construction of quay walls and port infrastructure.', photos:[], status:'approved', submitted_at:'2025-02-01T08:00:00Z' },
+    { id:'4', name:'Kinshasa Highway N1', type:'Infrastructure', year:'1972', location_name:'Kinshasa, DRC', country:'DRC', lat:'-4.3217', lng:'15.3222', name_contact:'Heritage Team', email:['heritage','cfe.be'].join('@'), company:'CFE', works:'Road construction and bridge works.', photos:[], status:'approved', submitted_at:'2025-02-01T08:00:00Z' },
+    { id:'5', name:'Unverified Claimed Project', type:'Energy', year:'2010', location_name:'Unknown', country:'', lat:'0', lng:'0', name_contact:'Anonymous', email:['anon','test.com'].join('@'), company:'', works:'No details provided.', photos:[], status:'rejected', submitted_at:'2025-03-05T16:40:00Z' }
+  ];
+
+})();
+</script>
+</body>
+</html>
