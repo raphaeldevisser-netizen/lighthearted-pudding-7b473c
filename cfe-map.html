@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFE — 150 Years of Construction Heritage</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8C97A;--dark:#0D0D0D;--charcoal:#1A1A1A;--mid:#2C2C2C;--text:#F0EDE8;--muted:#8A8278;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--dark);color:var(--text);overflow:hidden;}
+#header{position:fixed;top:0;left:0;right:0;z-index:1000;height:64px;background:rgba(13,13,13,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:space-between;padding:0 28px;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-mark{width:36px;height:36px;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--gold);letter-spacing:1px;}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;letter-spacing:3px;text-transform:uppercase;color:var(--text);}
+.logo-sub{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:20px;}
+#project-count{font-size:12px;letter-spacing:1px;color:var(--muted);}
+#project-count span{color:var(--gold);font-weight:500;}
+.btn-submit{background:var(--gold);color:var(--dark);border:none;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;}
+.btn-submit:hover{background:var(--gold-light);}
+#map-wrapper{position:fixed;top:64px;left:0;right:0;bottom:44px;width:100% !important;}#map{position:absolute !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;width:100% !important;height:100% !important;}
+#filters{position:fixed;top:80px;left:20px;z-index:100;background:rgba(26,26,26,0.95);backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,0.15);padding:16px;width:220px;}
+.filter-title{font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.filter-group{margin-bottom:14px;}
+.filter-label{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;}
+.filter-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{font-size:10px;padding:4px 8px;border:1px solid rgba(201,168,76,0.3);cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;color:var(--muted);background:transparent;}
+.chip.active{background:var(--gold);color:var(--dark);border-color:var(--gold);font-weight:600;}
+.chip:hover{border-color:var(--gold);color:var(--text);}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:rgba(201,168,76,0.3);outline:none;margin:8px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--gold);cursor:pointer;border-radius:50%;}
+.range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);}
+#popup-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+#popup-overlay.open{display:flex;}
+#popup{background:var(--charcoal);border:1px solid rgba(201,168,76,0.2);width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;position:relative;}
+.popup-photos{width:100%;height:220px;background:var(--mid);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);}
+.popup-photos img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;}
+.popup-close{position:absolute;top:12px;right:12px;width:32px;height:32px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);font-size:16px;transition:all 0.2s;z-index:10;}
+.popup-close:hover{background:var(--gold);color:var(--dark);}
+.popup-body{padding:24px 28px;}
+.popup-year{font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+.popup-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;line-height:1.2;margin-bottom:6px;}
+.popup-type{font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:20px;}
+.popup-divider{height:1px;background:rgba(201,168,76,0.15);margin:16px 0;}
+.popup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.popup-field label{font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:3px;}
+.popup-field p{font-size:13px;color:var(--text);}
+.popup-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-top:4px;}
+#stats-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:rgba(13,13,13,0.9);backdrop-filter:blur(8px);border-top:1px solid rgba(201,168,76,0.1);display:flex;align-items:center;justify-content:center;gap:48px;}
+.stat{display:flex;align-items:center;gap:8px;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);}
+.stat-label{font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
+.stat-divider{width:1px;height:20px;background:rgba(201,168,76,0.2);}
+#loading{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--dark);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity 0.5s;}
+.loading-logo{font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--gold);letter-spacing:6px;}
+.loading-line{width:200px;height:1px;background:rgba(201,168,76,0.2);position:relative;overflow:hidden;}
+.loading-progress{height:100%;background:var(--gold);animation:load 2s ease forwards;}
+@keyframes load{from{width:0}to{width:100%}}
+.loading-sub{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="loading-logo">CFE</div>
+  <div class="loading-line"><div class="loading-progress"></div></div>
+  <div class="loading-sub">150 Years of Construction Heritage</div>
+</div>
+<div id="header">
+  <div class="logo">
+    <div class="logo-mark">CFE</div>
+    <div>
+      <div class="logo-text">Heritage Map</div>
+      <div class="logo-sub">150 Years &middot; Global Construction</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="project-count">Showing <span id="visible-count">0</span> of <span id="total-count">0</span> projects</div>
+    <a href="cfe-submit.html" class="btn-submit">+ Submit a Project</a>
+  </div>
+</div>
+<div id="map-wrapper"><div id="map"></div></div>
+<div id="filters">
+  <div class="filter-title">&#11042; Filter Projects</div>
+  <div class="filter-group">
+    <div class="filter-label">Type of Works</div>
+    <div class="filter-chips" id="type-filters">
+      <div class="chip active" data-type="all">All</div>
+      <div class="chip" data-type="Civil Engineering">Civil</div>
+      <div class="chip" data-type="Building Construction">Buildings</div>
+      <div class="chip" data-type="Infrastructure">Infrastructure</div>
+      <div class="chip" data-type="Industrial">Industrial</div>
+      <div class="chip" data-type="Marine">Marine</div>
+      <div class="chip" data-type="Energy">Energy</div>
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Decade: <span id="year-display">All Years</span></div>
+    <input type="range" id="year-range" min="1875" max="2025" value="1875" step="10">
+    <div class="range-labels"><span>1875</span><span>2025</span></div>
+  </div>
+</div>
+<div id="popup-overlay">
+  <div id="popup">
+    <div class="popup-photos" id="popup-photos">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:0.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      <span style="font-size:11px;letter-spacing:1px;">No photos submitted</span>
+    </div>
+    <button class="popup-close" id="popup-close-btn">&#10005;</button>
+    <div class="popup-body">
+      <div class="popup-year" id="popup-year"></div>
+      <div class="popup-name" id="popup-name"></div>
+      <div class="popup-type" id="popup-type"></div>
+      <div class="popup-divider"></div>
+      <div class="popup-grid">
+        <div class="popup-field"><label>Location</label><p id="popup-location"></p></div>
+        <div class="popup-field"><label>Submitted by</label><p id="popup-submitted"></p></div>
+        <div class="popup-field"><label>Company</label><p id="popup-company"></p></div>
+        <div class="popup-field"><label>Year Delivered</label><p id="popup-delivered"></p></div>
+      </div>
+      <div class="popup-divider"></div>
+      <div class="popup-field"><label>Works Description</label><p class="popup-desc" id="popup-works"></p></div>
+    </div>
+  </div>
+</div>
+<div id="stats-bar">
+  <div class="stat"><div class="stat-num" id="stat-projects">0</div><div class="stat-label">Projects</div></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><div class="stat-num" id="stat-countries">0</div><div class="stat-label">Countries</div></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><div class="stat-num">150</div><div class="stat-label">Years Heritage</div></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><div class="stat-num" id="stat-types">0</div><div class="stat-label">Project Types</div></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var MAPS_KEY   = 'AIzaSyC7lh812kiuuekwH2hT1vaRmQbwbznOJGI';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9iTkjOeH0Zl1ETbdMBPTm0k4cfAbw7JI4OCA3LxlxzvZgag9jo1e5oIV_swt0G_GNWQ/exec';
+
+var map, markers=[], allProjects=[], activeType='all', activeYear=1875;
+var TYPE_COLORS={'Civil Engineering':'#C9A84C','Building Construction':'#4CAF9A','Infrastructure':'#4C7EC9','Industrial':'#C94C4C','Marine':'#4CB8C9','Energy':'#A84CC9','Other':'#8A8278'};
+
+var DEMO=[
+  {name:'Port of Antwerp Extension',lat:'51.2194',lng:'4.4025',type:'Marine',year:'1923',company:'CFE',location_name:'Antwerp, Belgium',name_contact:'Heritage Team',works:'Construction of quay walls and port infrastructure.',photos:'',status:'approved',country:'Belgium'},
+  {name:'Brussels Metro Line 1',lat:'50.8503',lng:'4.3517',type:'Civil Engineering',year:'1976',company:'CFE',location_name:'Brussels, Belgium',name_contact:'Heritage Team',works:'Tunnelling and station construction for urban metro system.',photos:'',status:'approved',country:'Belgium'},
+  {name:'Atomium Foundations',lat:'50.8946',lng:'4.3411',type:'Building Construction',year:'1958',company:'CFE',location_name:'Brussels, Belgium',name_contact:'Heritage Team',works:'Foundation works and structural support for the Atomium.',photos:'',status:'approved',country:'Belgium'},
+  {name:'Eurotunnel Service Works',lat:'51.0901',lng:'1.7800',type:'Infrastructure',year:'1994',company:'CFE',location_name:'Calais, France',name_contact:'Heritage Team',works:'Ancillary construction works for the Channel Tunnel.',photos:'',status:'approved',country:'France'},
+  {name:'Luxembourg Station Quarter',lat:'49.6116',lng:'6.1319',type:'Building Construction',year:'2003',company:'CFE',location_name:'Luxembourg City',name_contact:'Heritage Team',works:'Mixed-use development including offices and retail.',photos:'',status:'approved',country:'Luxembourg'},
+  {name:'Rotterdam Container Terminal',lat:'51.9225',lng:'4.4792',type:'Industrial',year:'1987',company:'CFE',location_name:'Rotterdam, Netherlands',name_contact:'Heritage Team',works:'Civil works for container terminal expansion.',photos:'',status:'approved',country:'Netherlands'},
+  {name:'Kinshasa Highway N1',lat:'-4.3217',lng:'15.3222',type:'Infrastructure',year:'1972',company:'CFE',location_name:'Kinshasa, DRC',name_contact:'Heritage Team',works:'Road construction and bridge works.',photos:'',status:'approved',country:'DRC'},
+  {name:'Abu Dhabi Coastal Road',lat:'24.4539',lng:'54.3773',type:'Civil Engineering',year:'2008',company:'CFE',location_name:'Abu Dhabi, UAE',name_contact:'Heritage Team',works:'Coastal road reclamation and infrastructure works.',photos:'',status:'approved',country:'UAE'},
+  {name:'Casablanca Tramway',lat:'33.5731',lng:'-7.5898',type:'Infrastructure',year:'2012',company:'CFE',location_name:'Casablanca, Morocco',name_contact:'Heritage Team',works:'Civil engineering works for urban tramway Line 1.',photos:'',status:'approved',country:'Morocco'},
+  {name:'Singapore Marina Works',lat:'1.2840',lng:'103.8607',type:'Marine',year:'1995',company:'CFE',location_name:'Singapore',name_contact:'Heritage Team',works:'Piling and marine foundation works.',photos:'',status:'approved',country:'Singapore'}
+];
+
+// ── STEP 1: fetch data immediately (before map loads) ─────────
+var _pendingProjects = null; // null = not yet loaded
+
+(function(){
+  var cb = '_d' + Date.now();
+  var el = document.createElement('script');
+  var t = setTimeout(function(){ done(DEMO); }, 8000);
+  window[cb] = function(data){
+    clearTimeout(t);
+    var all = (data && Array.isArray(data.projects)) ? data.projects : [];
+    var ok = all.filter(function(p){ return String(p.status).toLowerCase().trim()==='approved'; });
+    done(ok.length > 0 ? ok : DEMO);
+  };
+  el.onerror = function(){ clearTimeout(t); done(DEMO); };
+  el.src = SCRIPT_URL + '?action=list&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(el);
+  function done(projects){
+    delete window[cb];
+    _pendingProjects = projects;
+    console.log('CFE data ready: ' + projects.length + ' projects');
+    // If map already ready, render now
+    if(map) showProjects(projects);
+  }
+})();
+
+// ── STEP 2: Google Maps calls this when ready ─────────────────
+window.gm_authFailure = function(){
+  document.getElementById('map').innerHTML = '<div style="color:red;padding:20px;font-family:monospace;">Google Maps AUTH FAILURE — check API key restrictions</div>';
+};
+
+window.initMap = function(){
+  // Force height - Google Maps overrides position:fixed so we use absolute inside fixed wrapper
+  var h = window.innerHeight - 64 - 44;
+  var wrapper = document.getElementById('map-wrapper');
+  var mapEl = document.getElementById('map');
+  wrapper.style.cssText = 'position:fixed;top:64px;left:0;right:0;bottom:44px;width:100%;height:' + h + 'px;';
+  mapEl.style.cssText = 'width:100%;height:' + h + 'px;';
+  console.log('CFE map height: ' + h + 'px, mapEl offsetHeight before init: ' + mapEl.offsetHeight);
+
+  map = new google.maps.Map(document.getElementById('map'), {
+    center:{lat:20,lng:10}, zoom:2, minZoom:2,
+    mapTypeControl:false, streetViewControl:false, fullscreenControl:false,
+    styles:[
+      {elementType:'geometry',stylers:[{color:'#1a1a1a'}]},
+      {elementType:'labels.text.fill',stylers:[{color:'#8a8278'}]},
+      {elementType:'labels.text.stroke',stylers:[{color:'#0d0d0d'}]},
+      {featureType:'water',elementType:'geometry',stylers:[{color:'#0a0f1a'}]},
+      {featureType:'road',stylers:[{visibility:'off'}]},
+      {featureType:'poi',stylers:[{visibility:'off'}]},
+      {featureType:'landscape',elementType:'geometry',stylers:[{color:'#1a1a1a'}]},
+      {featureType:'administrative',elementType:'geometry',stylers:[{color:'#2c2c2c'}]},
+      {featureType:'administrative.country',elementType:'geometry.stroke',stylers:[{color:'#3c3c3c'}]}
+    ]
+  });
+  console.log('CFE map ready');
+
+  // If data already loaded, render immediately; else wait
+  if(_pendingProjects !== null){
+    showProjects(_pendingProjects);
+  }
+  // else: the JSONP done() callback will call showProjects when it arrives
+
+  setTimeout(function(){
+    var l = document.getElementById('loading');
+    l.style.opacity = '0';
+    setTimeout(function(){ l.style.display = 'none'; }, 500);
+  }, 1500);
+};
+
+// ── RENDER ────────────────────────────────────────────────────
+function showProjects(projects){
+  allProjects = projects;
+  renderMarkers(projects);
+  updateStats(projects);
+}
+
+function renderMarkers(projects){
+  markers.forEach(function(m){ m.setMap(null); });
+  markers = [];
+  projects.forEach(function(p){
+    var lat = parseFloat(p.lat), lng = parseFloat(p.lng);
+    if(isNaN(lat) || isNaN(lng)) return;
+    var color = TYPE_COLORS[p.type] || TYPE_COLORS['Other'];
+    var m = new google.maps.Marker({
+      position:{lat:lat,lng:lng}, map:map, title:p.name,
+      icon:{path:google.maps.SymbolPath.CIRCLE,fillColor:color,fillOpacity:0.9,strokeColor:'#0d0d0d',strokeWeight:1.5,scale:7}
+    });
+    m.addListener('click', function(){ openPopup(p); });
+    markers.push(m);
+  });
+  document.getElementById('visible-count').textContent = markers.length;
+  console.log('CFE rendered ' + markers.length + ' markers');
+}
+
+function updateStats(projects){
+  document.getElementById('stat-projects').textContent = projects.length;
+  document.getElementById('total-count').textContent = projects.length;
+  document.getElementById('stat-countries').textContent = new Set(projects.map(function(p){ return p.country; }).filter(Boolean)).size || 0;
+  document.getElementById('stat-types').textContent = new Set(projects.map(function(p){ return p.type; }).filter(Boolean)).size || 0;
+}
+
+// ── POPUP ─────────────────────────────────────────────────────
+function openPopup(p){
+  document.getElementById('popup-year').textContent = p.year || '';
+  document.getElementById('popup-name').textContent = p.name || '';
+  document.getElementById('popup-type').textContent = p.type || '';
+  document.getElementById('popup-location').textContent = p.location_name || '—';
+  document.getElementById('popup-submitted').textContent = p.name_contact || '—';
+  document.getElementById('popup-company').textContent = p.company || '—';
+  document.getElementById('popup-delivered').textContent = p.year || '—';
+  document.getElementById('popup-works').textContent = p.works || 'No description provided.';
+  var photoList = p.photos ? p.photos.split('|').filter(Boolean) : [];
+  document.getElementById('popup-photos').innerHTML = photoList.length
+    ? '<img src="'+photoList[0]+'" alt="'+p.name+'">'
+    : '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:0.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span style="font-size:11px;letter-spacing:1px;">No photos submitted</span>';
+  document.getElementById('popup-overlay').classList.add('open');
+}
+
+document.getElementById('popup-close-btn').addEventListener('click', function(){
+  document.getElementById('popup-overlay').classList.remove('open');
+});
+document.getElementById('popup-overlay').addEventListener('click', function(e){
+  if(e.target === this) this.classList.remove('open');
+});
+
+// ── FILTERS ───────────────────────────────────────────────────
+document.getElementById('type-filters').addEventListener('click', function(e){
+  var chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip[data-type]').forEach(function(c){ c.classList.remove('active'); });
+  chip.classList.add('active');
+  activeType = chip.dataset.type;
+  applyFilters();
+});
+
+document.getElementById('year-range').addEventListener('input', function(){
+  activeYear = parseInt(this.value);
+  document.getElementById('year-display').textContent = activeYear === 1875 ? 'All Years' : 'Since ' + activeYear;
+  applyFilters();
+});
+
+function applyFilters(){
+  var filtered = allProjects.filter(function(p){
+    var tm = activeType === 'all' || p.type === activeType;
+    var ym = activeYear === 1875 || (!isNaN(parseInt(p.year)) && parseInt(p.year) >= activeYear);
+    return tm && ym;
+  });
+  renderMarkers(filtered);
+}
+
+// ── LOAD GOOGLE MAPS ──────────────────────────────────────────
+var s = document.createElement('script');
+s.src = 'https://maps.googleapis.com/maps/api/js?key=' + MAPS_KEY + '&callback=initMap&loading=async';
+s.async = true; s.defer = true;
+document.head.appendChild(s);
+
+})();
+</script>
+</body>
+</html>
