@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CFE Script Test</title>
+<style>
+body{font-family:monospace;background:#111;color:#eee;padding:30px;max-width:900px;}
+button{background:#C9A84C;color:#000;border:none;padding:10px 20px;cursor:pointer;font-size:14px;margin:5px;}
+pre{background:#1a1a1a;padding:16px;white-space:pre-wrap;word-break:break-all;border:1px solid #333;margin-top:10px;max-height:400px;overflow:auto;}
+.ok{color:#4CAF9A;} .err{color:#C94C4C;} .info{color:#C9A84C;}
+h3{color:#C9A84C;margin-top:24px;}
+</style>
+</head>
+<body>
+<h2>CFE Diagnostic</h2>
+
+<h3>1. Fetch project list from Apps Script</h3>
+<button onclick="testGet()">Fetch Projects</button>
+<pre id="get-result">Click to test...</pre>
+
+<h3>2. Check what the map sees after filtering</h3>
+<button onclick="testFilter()">Check Approved Projects</button>
+<pre id="filter-result">Click to test...</pre>
+
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9iTkjOeH0Zl1ETbdMBPTm0k4cfAbw7JI4OCA3LxlxzvZgag9jo1e5oIV_swt0G_GNWQ/exec';
+
+function fetchProjects(cb) {
+  var callbackName = '_test' + Date.now();
+  var script = document.createElement('script');
+  var timer = setTimeout(function() {
+    document.getElementById('get-result').textContent = 'TIMEOUT — script not responding';
+    document.getElementById('get-result').className = 'err';
+    script.remove();
+    delete window[callbackName];
+  }, 8000);
+  window[callbackName] = function(data) {
+    clearTimeout(timer);
+    delete window[callbackName];
+    script.remove();
+    cb(data);
+  };
+  script.onerror = function() {
+    clearTimeout(timer);
+    document.getElementById('get-result').textContent = 'SCRIPT LOAD ERROR — check URL/deployment';
+    document.getElementById('get-result').className = 'err';
+  };
+  script.src = SCRIPT_URL + '?action=list&callback=' + callbackName;
+  document.head.appendChild(script);
+}
+
+function testGet() {
+  document.getElementById('get-result').textContent = 'Fetching...';
+  document.getElementById('get-result').className = 'info';
+  fetchProjects(function(data) {
+    var el = document.getElementById('get-result');
+    if (!data) {
+      el.textContent = 'ERROR: null response';
+      el.className = 'err';
+      return;
+    }
+    var projects = data.projects || [];
+    var out = 'Total rows in sheet: ' + projects.length + '\n\n';
+    projects.forEach(function(p, i) {
+      out += '--- Row ' + (i+1) + ' ---\n';
+      out += '  name:   ' + p.name + '\n';
+      out += '  status: [' + p.status + ']\n';
+      out += '  lat:    [' + p.lat + ']\n';
+      out += '  lng:    [' + p.lng + ']\n';
+      out += '  type:   ' + p.type + '\n';
+    });
+    el.textContent = out || 'No projects returned';
+    el.className = projects.length > 0 ? 'ok' : 'err';
+  });
+}
+
+function testFilter() {
+  document.getElementById('filter-result').textContent = 'Fetching...';
+  document.getElementById('filter-result').className = 'info';
+  fetchProjects(function(data) {
+    var el = document.getElementById('filter-result');
+    var projects = (data && data.projects) ? data.projects : [];
+    var approved = projects.filter(function(p) {
+      return String(p.status).toLowerCase().trim() === 'approved';
+    });
+    var withCoords = approved.filter(function(p) {
+      return !isNaN(parseFloat(p.lat)) && !isNaN(parseFloat(p.lng));
+    });
+    var out = 'Total projects: ' + projects.length + '\n';
+    out += 'Approved: ' + approved.length + '\n';
+    out += 'Approved with valid coords: ' + withCoords.length + '\n\n';
+
+    if (approved.length === 0 && projects.length > 0) {
+      out += 'PROBLEM: No approved projects. Status values found:\n';
+      projects.forEach(function(p) {
+        out += '  "' + p.status + '" (length:' + String(p.status).length + ')\n';
+      });
+    }
+    if (withCoords.length === 0 && approved.length > 0) {
+      out += 'PROBLEM: Approved projects have no valid coordinates:\n';
+      approved.forEach(function(p) {
+        out += '  lat="' + p.lat + '" lng="' + p.lng + '"\n';
+      });
+    }
+    if (withCoords.length > 0) {
+      out += 'These should show on map:\n';
+      withCoords.forEach(function(p) {
+        out += '  ✓ ' + p.name + ' (' + p.lat + ', ' + p.lng + ')\n';
+      });
+    }
+    el.textContent = out;
+    el.className = withCoords.length > 0 ? 'ok' : 'err';
+  });
+}
+</script>
+</body>
+</html>
+
+<h3 style="color:#C9A84C;margin-top:24px;">3. Test Google Maps API key</h3>
+<button onclick="testMaps()">Test Maps API</button>
+<pre id="maps-result">Click to test...</pre>
+<div id="maps-test-div" style="width:300px;height:200px;margin-top:10px;border:1px solid #333;"></div>
+<script>
+function testMaps(){
+  document.getElementById('maps-result').textContent = 'Loading Maps API...';
+  document.getElementById('maps-result').className = 'info';
+  window._mapsTestCb = function(){
+    try {
+      var m = new google.maps.Map(document.getElementById('maps-test-div'), {
+        center:{lat:50.85,lng:4.35}, zoom:10
+      });
+      document.getElementById('maps-result').textContent = 'Maps API loaded OK ✓\nMap rendered successfully';
+      document.getElementById('maps-result').className = 'ok';
+    } catch(e) {
+      document.getElementById('maps-result').textContent = 'Maps API loaded but map failed:\n' + e.toString();
+      document.getElementById('maps-result').className = 'err';
+    }
+  };
+  var s = document.createElement('script');
+  s.onerror = function(){
+    document.getElementById('maps-result').textContent = 'FAILED to load Maps API — API key may be restricted or invalid';
+    document.getElementById('maps-result').className = 'err';
+  };
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC7lh812kiuuekwH2hT1vaRmQbwbznOJGI&callback=_mapsTestCb&loading=async';
+  document.head.appendChild(s);
+}
+</script>

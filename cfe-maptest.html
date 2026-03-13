@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Map Test</title>
+<style>
+body{margin:0;background:#111;}
+#map{width:100vw;height:100vh;}
+#status{position:fixed;top:10px;left:10px;background:rgba(0,0,0,0.8);color:#fff;padding:10px;font-family:monospace;font-size:13px;z-index:999;}
+</style>
+</head>
+<body>
+<div id="status">Loading...</div>
+<div id="map"></div>
+<script>
+function initMap(){
+  document.getElementById('status').textContent = 'initMap called - creating map...';
+  try {
+    var m = new google.maps.Map(document.getElementById('map'), {
+      center: {lat: 50.85, lng: 4.35},
+      zoom: 8
+    });
+    document.getElementById('status').textContent = 'Map created OK - you should see Brussels';
+    new google.maps.Marker({
+      position: {lat: 50.85, lng: 4.35},
+      map: m,
+      title: 'Test marker'
+    });
+  } catch(e) {
+    document.getElementById('status').textContent = 'ERROR: ' + e.toString();
+  }
+}
+window.gm_authFailure = function(){
+  document.getElementById('status').textContent = 'AUTH FAILURE - API key rejected or billing not enabled';
+  document.getElementById('status').style.color = '#f66';
+};
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC7lh812kiuuekwH2hT1vaRmQbwbznOJGI&callback=initMap" async defer></script>
+</body>
+</html>
