@@ -22,7 +22,7 @@
   --accent:var(--green);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;font-family:'Poppins',sans-serif;background:var(--off-white);color:var(--text);overflow:hidden;}
+html,body{height:100%;font-family:Poppins,sans-serif;background:var(--off-white);color:var(--text);overflow:hidden;}
 
 #header{
   position:fixed;top:0;left:0;right:0;z-index:1000;height:60px;
@@ -41,7 +41,7 @@ html,body{height:100%;font-family:'Poppins',sans-serif;background:var(--off-whit
 #project-count strong{color:var(--navy);font-weight:700;}
 .btn-submit{
   background:var(--navy);color:var(--white);border:none;
-  padding:9px 18px;font-family:'Poppins',sans-serif;
+  padding:9px 18px;font-family:Poppins,sans-serif;
   font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;
   cursor:pointer;transition:background 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
 }
@@ -269,7 +269,7 @@ var _pendingProjects=null;
 })();
 
 window.gm_authFailure=function(){
-  document.getElementById('map').innerHTML='<div style="padding:40px;color:#1B2A4A;font-family:'Poppins',sans-serif;">Google Maps auth failure — check API key.</div>';
+  document.getElementById('map').innerHTML='<div style="padding:40px;color:#1B2A4A;font-family:Poppins,sans-serif;">Google Maps auth failure — check API key.</div>';
 };
 
 window.initMap=function(){
