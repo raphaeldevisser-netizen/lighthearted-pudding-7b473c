@@ -328,9 +328,7 @@ document.getElementById('submit-btn').addEventListener('click',submitForm);
 async function submitForm(){
   if(!validate()){var first=document.querySelector('.field.error');if(first)first.scrollIntoView({behavior:'smooth',block:'center'});return;}
   var btn=document.getElementById('submit-btn');btn.disabled=true;btn.textContent='Submitting\u2026';
-  var photoBase64=await Promise.all(uploadedPhotos.map(function(file){
-    return new Promise(function(resolve){var r=new FileReader();r.onload=function(e){resolve(e.target.result);};r.readAsDataURL(file);});
-  }));
+  // Build payload WITHOUT photos first (photos sent separately to avoid size limits)
   var payload={
     name_contact:document.getElementById('inp-name').value.trim(),
     email:document.getElementById('inp-email').value.trim(),
@@ -343,12 +341,37 @@ async function submitForm(){
     lat:document.getElementById('inp-lat').value,
     lng:document.getElementById('inp-lng').value,
     country:document.getElementById('inp-country').value,
-    photos:photoBase64,status:'pending',
+    photos:[],
+    status:'pending',
     submitted_at:new Date().toISOString()
   };
+
   try{
+    // Step 1: submit text data
     var encoded='payload='+encodeURIComponent(JSON.stringify(payload));
     await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:encoded});
+
+    // Step 2: if photos, send each one individually in separate requests
+    if(uploadedPhotos.length>0){
+      for(var i=0;i<uploadedPhotos.length;i++){
+        var photoPayload=await new Promise(function(resolve){
+          var r=new FileReader();
+          r.onload=function(e){
+            resolve({
+              action:'addPhoto',
+              projectKey: payload.name_contact+'_'+payload.submitted_at,
+              photoData: e.target.result,
+              photoIndex: i
+            });
+          };
+          r.readAsDataURL(uploadedPhotos[i]);
+        });
+        var photoEncoded='payload='+encodeURIComponent(JSON.stringify(photoPayload));
+        fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:photoEncoded})
+          .catch(function(){});
+      }
+    }
+
     document.getElementById('form-wrapper').style.display='none';
     document.getElementById('success-screen').style.display='block';
     window.scrollTo(0,0);
